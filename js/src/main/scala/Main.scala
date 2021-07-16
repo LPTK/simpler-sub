@@ -39,7 +39,7 @@ object Main {
             s" at line $line:<BLOCKQUOTE>$lineStr</BLOCKQUOTE>"
         case Success(p, index) =>
           // println(s"Parsed: $p")
-          object Typer extends simplesub.Typer(dbg = false) with simplesub.TypeSimplifier {
+          object Typer extends simplesub.Typer(dbg = false) {
             import simplesub._
             // Saldy, the original `inferTypes` version does not seem to work in JavaScript, as it raises a
             //    "RangeError: Maximum call stack size exceeded"
@@ -55,13 +55,13 @@ object Main {
               while (defs.nonEmpty) {
                 val (isrec, nme, rhs) = defs.head
                 defs = defs.tail
-                val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(curCtx, 0)) catch {
+                val ty_sch = try Right(typeLetRhs(isrec, nme, rhs)(curCtx)) catch {
                   case err: TypeError =>
                     if (stopAtFirstError) defs = Nil
                     Left(err)
                 }
                 res += ty_sch
-                curCtx += (nme -> ty_sch.getOrElse(freshVar(0)))
+                curCtx += (nme -> ty_sch.getOrElse(freshVar))
               }
               res.toList
             }
@@ -70,12 +70,17 @@ object Main {
           (p.defs.zipWithIndex lazyZip tys).map {
             case ((d, i), Right(ty)) =>
               println(s"Typed `${d._2}` as: $ty")
-              println(s" where: ${ty.instantiate(0).showBounds}")
-              val com = Typer.canonicalizeType(ty.instantiate(0))
+              println(s" where: ${ty.instantiate.showBounds}")
+              /* 
+              val com = Typer.canonicalizeType(ty.instantiate)
               println(s"Compact type before simplification: ${com}")
               val sim = Typer.simplifyType(com)
               println(s"Compact type after simplification: ${sim}")
               val exp = Typer.coalesceCompactType(sim)
+              */
+              val sim = Typer.simplifyType(ty.instantiate)
+              println(s"Type after simplification: ${sim}")
+              val exp = Typer.coalesceType(sim)
               s"""<b>
                   <font color="#93a1a1">val </font>
                   <font color="LightGreen">${d._2}</font>: 
