@@ -1,0 +1,30 @@
+// fun x -> x.f
+{f: 'a} -> ⊥
+
+// {}
+{}
+
+// { f = 42 }
+{f: int}
+
+// { f = 42 }.f
+int
+
+// (fun x -> x.f) { f = 42 }
+int
+
+// fun f -> { x = f 42 }.x
+(int -> 'a) -> ⊥
+
+// fun f -> { x = f 42; y = 123 }.y
+(int -> 'a) -> int
+
+// if true then { a = 1; b = true } else { b = false; c = 42 }
+{b: bool}
+
+// [wrong:] { a = 123; b = true }.c
+// ERROR: missing field: c in {a: int, b: bool}
+
+// [wrong:] fun x -> { a = x }.b
+// ERROR: missing field: b in {a: 'a}
+

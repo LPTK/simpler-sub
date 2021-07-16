@@ -1,0 +1,15 @@
+// let rec f = fun x -> f x.u in f
+// ERROR: Unsupported: local recursive let binding
+
+// let rec r = fun a -> r in if true then r else r
+// ERROR: Unsupported: local recursive let binding
+
+// let rec l = fun a -> l in let rec r = fun a -> fun a -> r in if true then l else r
+// ERROR: Unsupported: local recursive let binding
+
+// let rec l = fun a -> fun a -> fun a -> l in let rec r = fun a -> fun a -> r in if true then l else r
+// ERROR: Unsupported: local recursive let binding
+
+// let rec recursive_monster = fun x -> { thing = x; self = recursive_monster x } in recursive_monster
+// ERROR: Unsupported: local recursive let binding
+

@@ -10,6 +10,7 @@ package object simplesub {
     def ===(other: A): Boolean = self == other
     def =/=(other: A): Boolean = self != other
     def is(other: AnyRef): Boolean = self.asInstanceOf[AnyRef] eq other
+    def isnt(other: AnyRef): Boolean = !(self.asInstanceOf[AnyRef] eq other)
     /** An alternative to === when in ScalaTest, which shadows our === */
     def =:=(other: A): Boolean = self == other
   }

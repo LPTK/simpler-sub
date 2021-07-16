@@ -1,0 +1,24 @@
+// fun f -> fun x -> f (f x)
+('a -> 'a) -> 'a -> 'a
+
+// not true
+bool
+
+// (fun x -> not x) true
+bool
+
+// fun x -> not x
+bool -> bool
+
+// fun x -> { u = not x; v = x }
+'a ∧ bool -> {u: bool, v: 'a}
+
+// if true then { u = 1; v = 2; w = 3 } else { u = true; v = 4; x = 5 }
+{u: ⊤, v: int}
+
+// if true then fun x -> { u = 1; v = x } else fun y -> { u = y; v = y }
+'a -> {u: 'a ∨ int, v: 'a ∨ int}
+
+// [wrong:] fun x -> x x
+// ERROR: Illegal cyclic constraint: α0 <: (α0 -> α1)
+

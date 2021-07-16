@@ -1,0 +1,21 @@
+// 42
+int
+
+// fun x -> 42
+⊤ -> int
+
+// fun x -> x
+'a -> 'a
+
+// fun x -> x 42
+(int -> 'a) -> ⊥
+
+// (fun x -> x) 42
+int
+
+// fun f -> fun x -> f (f x)  // twice
+('a -> 'a) -> 'a -> 'a
+
+// let twice = fun f -> fun x -> f (f x) in twice
+'a ∧ ('b -> 'b) -> 'b -> 'b
+

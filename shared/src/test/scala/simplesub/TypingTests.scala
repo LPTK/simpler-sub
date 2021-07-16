@@ -8,6 +8,8 @@ import fastparse.Parsed.Success
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
 class TypingTests extends TypingTestHelpers {
   
+  // TODO remove expected strings; we now use check files in folder ~/out/ instead
+  
   // In the tests, leave the expected string empty so the inferred type is printed in the console
   // and you can copy and paste it after making sure it is correct.
   

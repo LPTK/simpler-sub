@@ -1,0 +1,48 @@
+// (let rec x = {a = x; b = x} in x)
+// ERROR: Unsupported: local recursive let binding
+
+// (let rec x = fun v -> {a = x v; b = x v} in x)
+// ERROR: Unsupported: local recursive let binding
+
+// [wrong:] let rec x = (let rec y = {u = y; v = (x y)} in 0) in 0
+// ERROR: Unsupported: local recursive let binding
+
+// (fun x -> (let y = (x x) in 0))
+// ERROR: Illegal cyclic constraint: α0 <: (α0 -> α2)
+
+// (let rec x = (fun y -> (y (x x))) in x)
+// ERROR: Unsupported: local recursive let binding
+
+// fun next -> 0
+⊤ -> int
+
+// ((fun x -> (x x)) (fun x -> x))
+// ERROR: Illegal cyclic constraint: α0 <: (α0 -> α1)
+
+// (let rec x = (fun y -> (x (y y))) in x)
+// ERROR: Unsupported: local recursive let binding
+
+// fun x -> (fun y -> (x (y y)))
+// ERROR: Illegal cyclic constraint: α1 <: (α1 -> α2)
+
+// (let rec x = (let y = (x x) in (fun z -> z)) in x)
+// ERROR: Unsupported: local recursive let binding
+
+// (let rec x = (fun y -> (let z = (x x) in y)) in x)
+// ERROR: Unsupported: local recursive let binding
+
+// (let rec x = (fun y -> {u = y; v = (x x)}) in x)
+// ERROR: Unsupported: local recursive let binding
+
+// (let rec x = (fun y -> {u = (x x); v = y}) in x)
+// ERROR: Unsupported: local recursive let binding
+
+// (let rec x = (fun y -> (let z = (y x) in y)) in x)
+// ERROR: Unsupported: local recursive let binding
+
+// (fun x -> (let y = (x x.v) in 0))
+⊥ -> int
+
+// let rec x = (let y = (x x) in (fun z -> z)) in (x (fun y -> y.u))
+// ERROR: Unsupported: local recursive let binding
+

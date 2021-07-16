@@ -1,0 +1,30 @@
+// true
+bool
+
+// not true
+bool
+
+// fun x -> not x
+bool -> bool
+
+// (fun x -> not x) true
+bool
+
+// fun x -> fun y -> fun z -> if x then y else z
+bool -> 'a -> 'a -> 'a
+
+// fun x -> fun y -> if x then y else x
+'a ∧ bool -> 'a ∧ bool -> 'a
+
+// [wrong:] succ true
+// ERROR: cannot constrain bool <: int
+
+// [wrong:] fun x -> succ (not x)
+// ERROR: cannot constrain bool <: int
+
+// [wrong:] (fun x -> not x.f) { f = 123 }
+// ERROR: cannot constrain int <: bool
+
+// [wrong:] (fun f -> fun x -> not (f x.u)) false
+// ERROR: cannot constrain bool <: 'a -> 'b
+

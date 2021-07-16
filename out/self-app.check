@@ -1,0 +1,34 @@
+// fun x -> x x
+// ERROR: Illegal cyclic constraint: α0 <: (α0 -> α1)
+
+// fun x -> x x x
+// ERROR: Illegal cyclic constraint: α0 <: (α0 -> α1)
+
+// fun x -> fun y -> x y x
+// ERROR: Illegal cyclic constraint: α2 <: (α0 -> α3)
+		where: α0 <: (α1 -> α2)
+
+// fun x -> fun y -> x x y
+// ERROR: Illegal cyclic constraint: α0 <: (α0 -> α2)
+
+// (fun x -> x x) (fun x -> x x)
+// ERROR: Illegal cyclic constraint: α0 <: (α0 -> α1)
+
+// fun x -> {l = x x; r = x }
+// ERROR: Illegal cyclic constraint: α0 <: (α0 -> α1)
+
+// (fun f -> (fun x -> f (x x)) (fun x -> f (x x)))
+// ERROR: Illegal cyclic constraint: α1 <: (α1 -> α2)
+
+// (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v)))
+// ERROR: Illegal cyclic constraint: α1 <: (α1 -> α3)
+
+// (fun f -> (fun x -> f (fun v -> (x x) v)) (fun x -> f (fun v -> (x x) v))) (fun f -> fun x -> f)
+// ERROR: Illegal cyclic constraint: α1 <: (α1 -> α3)
+
+// let rec trutru = fun g -> trutru (g true) in trutru
+// ERROR: Unsupported: local recursive let binding
+
+// fun i -> if ((i i) true) then true else true
+// ERROR: Illegal cyclic constraint: α0 <: (α0 -> α2)
+

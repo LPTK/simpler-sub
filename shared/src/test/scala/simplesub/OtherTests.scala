@@ -4,7 +4,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 @SuppressWarnings(Array("org.wartremover.warts.Equals"))
 class OtherTests extends AnyFunSuite {
-  
+  /* 
   test("canonicalization produces LCD") {
     
     val typer = new Typer(false) with TypeSimplifier
@@ -29,5 +29,5 @@ class OtherTests extends AnyFunSuite {
     assert(csct == "{f: {B: int, f: {f: {f: {f: {f: 'a}}}}}} as 'a") // cycle length 6
     
   }
-  
+  */
 }

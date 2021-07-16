@@ -14,10 +14,11 @@ abstract class TyperDebugging { self: Typer =>
   trait SimpleTypeImpl { self: SimpleType =>
     
     def children: List[SimpleType] = this match {
-      case tv: Variable => tv.lowerBounds ::: tv.upperBounds
+      case tv: Variable => tv.lowerBound :: tv.upperBound :: Nil
       case Function(l, r) => l :: r :: Nil
       case Record(fs) => fs.map(_._2)
       case Primitive(_) => Nil
+      case Top | Bot => Nil
     }
     def getVars: Set[Variable] = {
       val res = MutSet.empty[Variable]
@@ -33,10 +34,10 @@ abstract class TyperDebugging { self: Typer =>
     }
     def show: String = coalesceType(this).show
     def showBounds: String =
-      getVars.iterator.filter(tv => (tv.upperBounds ++ tv.lowerBounds).nonEmpty).map(tv =>
+      getVars.iterator.filter(tv => tv.upperBound =/= Top || tv.lowerBound =/= Bot).map(tv =>
         tv.toString
-          + (if (tv.lowerBounds.isEmpty) "" else " :> " + tv.lowerBounds.mkString(" | "))
-          + (if (tv.upperBounds.isEmpty) "" else " <: " + tv.upperBounds.mkString(" & "))
+          + (if (tv.lowerBound === Bot) "" else " :> " + tv.lowerBound)
+          + (if (tv.upperBound === Top) "" else " <: " + tv.upperBound)
       ).mkString(", ")
     
   }
