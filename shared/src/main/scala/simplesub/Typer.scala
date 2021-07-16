@@ -57,7 +57,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
   }
   
   /** Infer the type of a term. */
-  def typeTerm(term: Term)(implicit ctx: Ctx): SimpleType = {
+  def typeTerm(term: Term)(implicit ctx: Ctx): SimpleType = trace(s"Ty $term") {
     lazy val res = freshVar
     term match {
       case Var(name) =>
@@ -86,7 +86,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
         } else err("Unsupported: local recursive let binding")
         else typeTerm(App(Lam(nme, bod), rhs))
     }
-  }
+  }(res => " : " + res)
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
   def constrain(lhs: SimpleType, rhs: SimpleType): Unit = {
@@ -126,10 +126,15 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
         freshened.get(tv) match {
           case Some(tv) => tv
           case None =>
-            val v = tv.makeCopy
+            val v = new Variable(
+              freshenConcrete(tv.lowerBound),
+              freshenConcrete(tv.upperBound))
             freshened += tv -> v
             v
         }
+      case c: ConcreteType => freshenConcrete(c)
+    }
+    def freshenConcrete(ty: ConcreteType): ConcreteType = ty match {
       case Function(l, r) => Function(freshen(l), freshen(r))
       case Record(fs) => Record(fs.map(ft => ft._1 -> freshen(ft._2)))
       case Primitive(_) | Top | Bot => ty
@@ -242,7 +247,6 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
           + (if (boundsStr.isEmpty) "" else "\n\t\twhere: " + boundsStr))
       }
     }
-    def makeCopy: Variable = new Variable(lowerBound, upperBound)
     lazy val asTypeVar = new TypeVariable("α", uid)
     def unifyWith(that: Variable): Unit = {
       val rep0 = representative

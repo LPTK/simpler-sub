@@ -69,8 +69,9 @@ object Main {
           val tys = Typer.inferTypesJS(p)
           (p.defs.zipWithIndex lazyZip tys).map {
             case ((d, i), Right(ty)) =>
-              println(s"Typed `${d._2}` as: $ty")
-              println(s" where: ${ty.instantiate.showBounds}")
+              val ity = ty.instantiate
+              println(s"Typed `${d._2}` as: $ity")
+              println(s" where: ${ity.showBounds}")
               /* 
               val com = Typer.canonicalizeType(ty.instantiate)
               println(s"Compact type before simplification: ${com}")
@@ -78,7 +79,7 @@ object Main {
               println(s"Compact type after simplification: ${sim}")
               val exp = Typer.coalesceCompactType(sim)
               */
-              val sim = Typer.simplifyType(ty.instantiate)
+              val sim = Typer.simplifyType(ity)
               println(s"Type after simplification: ${sim}")
               val exp = Typer.coalesceType(sim)
               s"""<b>

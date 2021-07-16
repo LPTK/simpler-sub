@@ -8,8 +8,20 @@ import scala.annotation.tailrec
 abstract class TyperDebugging { self: Typer =>
   
   // Shadow Predef functions with debugging-flag-enabled ones:
-  def println(msg: => Any): Unit = if (dbg) scala.Predef.println(msg)
+  def println(msg: => Any): Unit = if (dbg) emitDbg(" " * indent + msg)
   def assert(assertion: => Boolean): Unit = if (dbg) scala.Predef.assert(assertion)
+  
+  private val noPostTrace: Any => String = _ => ""
+  
+  protected var indent = 0
+  def trace[T](pre: String)(thunk: => T)(post: T => String = noPostTrace): T = {
+    println(pre)
+    indent += 1
+    val res = try thunk finally indent -= 1
+    if (post isnt noPostTrace) println(post(res))
+    res
+  }
+  def emitDbg(str: String): Unit = scala.Predef.println(str)
   
   trait SimpleTypeImpl { self: SimpleType =>
     
