@@ -41,6 +41,11 @@ class TypingTestHelpers extends AnyFunSuite {
       }
       
       val res0 = typer.simplifyType(tyv)
+      if (dbg) {
+        println("simplified: " + res0)
+        println(" where " + res0.showBounds)
+      }
+      
       val res = typer.coalesceType(res0).show
       
       if (dbg) {

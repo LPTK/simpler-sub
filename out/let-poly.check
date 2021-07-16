@@ -1,17 +1,17 @@
 // let f = fun x -> x in {a = f 0; b = f true}
-{a: 'a, b: 'a}
+{a: ⊤, b: ⊤}
 
 // fun y -> let f = fun x -> x in {a = f y; b = f true}
-⊤ -> {a: 'a ∨ bool, b: 'a ∨ bool}
+'a -> {a: 'a ∨ bool, b: 'a ∨ bool}
 
 // fun y -> let f = fun x -> y x in {a = f 0; b = f true}
-('a -> 'b) -> {a: 'b, b: 'b}
+(⊤ -> 'a) -> {a: 'a, b: 'a}
 
 // fun y -> let f = fun x -> x y in {a = f (fun z -> z); b = f (fun z -> true)}
-⊤ -> {a: 'a ∨ bool, b: 'a ∨ bool}
+'a -> {a: 'a ∨ bool, b: 'a ∨ bool}
 
 // fun y -> let f = fun x -> x y in {a = f (fun z -> z); b = f (fun z -> succ z)}
-int -> {a: 'a ∨ int, b: 'a ∨ int}
+int -> {a: int, b: int}
 
 // [wrong:] (fun k -> k (fun x -> let tmp = add x 1 in x)) (fun f -> f true)
 // ERROR: cannot constrain bool <: int

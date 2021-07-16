@@ -112,6 +112,9 @@ class TypingTests extends TypingTestHelpers {
     doTest("let rec f = fun x -> f x.u in f",
       "{u: 'a} as 'a -> ⊥")
     
+    doTest("let rec consume = fun strm -> add strm.head (consume strm.tail) in consume",
+      "")
+    
     // [test:T2]:
     doTest("let rec r = fun a -> r in if true then r else r",
       "(⊤ -> 'a) as 'a")

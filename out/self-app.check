@@ -27,7 +27,7 @@
 // ERROR: Illegal cyclic constraint: α1 <: (α1 -> α3)
 
 // let rec trutru = fun g -> trutru (g true) in trutru
-// ERROR: Unsupported: local recursive let binding
+// ERROR: Illegal cyclic constraint: α2 <: (bool -> α2)
 
 // fun i -> if ((i i) true) then true else true
 // ERROR: Illegal cyclic constraint: α0 <: (α0 -> α2)

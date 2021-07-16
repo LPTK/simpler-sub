@@ -31,6 +31,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       PolymorphicType(Function(BoolType, Function(v, Function(v, v))))
     }
   )
+  private val builtinsSize = builtins.size
   
   /** The main type inference function */
   def inferTypes(pgrm: Pgrm, ctx: Ctx = builtins): List[Either[TypeError, PolymorphicType]] =
@@ -79,8 +80,11 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       case Rcd(fs) =>
         Record(fs.map { case (n, t) => (n, typeTerm(t)) })
       case Let(isrec, nme, rhs, bod) =>
-        if (isrec) err("Unsupported: local recursive let binding")
-        typeTerm(App(Lam(nme, bod), rhs))
+        if (isrec) if (ctx.sizeCompare(builtinsSize) <= 0) {
+          val n_ty = typeLetRhs(isrec, nme, rhs)
+          typeTerm(bod)(ctx + (nme -> n_ty))
+        } else err("Unsupported: local recursive let binding")
+        else typeTerm(App(Lam(nme, bod), rhs))
     }
   }
   
@@ -138,11 +142,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
     case (_, Top) => lhs
     case (Bot, _) | (_, Bot) => Bot
     case (Function(l0, r0), Function(l1, r1)) => Function(lub(l0, l1), glb(r0, r1))
-    case (Record(fs0), Record(fs1)) =>
-      val fs1m = fs1.toMap
-      Record(fs0.map {
-        case (n, t0) => n -> (fs1m.get(n) match { case Some(t1) => glb(t0, t1); case None => t0 })
-      })
+    case (Record(fs0), Record(fs1)) => Record(mergeMap(fs0, fs1)(glb(_, _)).toList)
     case (Primitive(n0), Primitive(n1)) if n0 === n1 => Primitive(n0)
     case _ => Bot
   }
@@ -212,7 +212,6 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       private var _upperBound: ConcreteType,
   ) extends SimpleType {
     private[simplesub] val uid: Int = { freshCount += 1; freshCount - 1 }
-    private[simplesub] var recursiveFlag = false // used temporarily by `compactType`
     private var _representative: Option[Variable] = None
     def representative: Variable =
       _representative match {
@@ -237,7 +236,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       constrain(lb, rep._upperBound)
     }
     private def occursCheck(ty: ConcreteType, dir: Boolean): Unit = {
-      if (ty.getVars.contains(this)) {
+      if (ty.getVars.contains(representative)) {
         val boundsStr = ty.showBounds
         err(s"Illegal cyclic constraint: $this ${if (dir) "<:" else ":>"} $ty"
           + (if (boundsStr.isEmpty) "" else "\n\t\twhere: " + boundsStr))
@@ -249,12 +248,16 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       val rep0 = representative
       val rep1 = that.representative
       if (rep0 isnt rep1) {
+        occursCheck(rep1._lowerBound, false)
+        occursCheck(rep1._upperBound, true)
         rep1.newLowerBound(rep0._lowerBound)
         rep1.newUpperBound(rep0._upperBound)
         rep0._representative = Some(rep1)
       }
     }
-    override def toString: String = _representative.fold("α" + uid)(_.toString + "<~" + uid)
+    override def toString: String =
+      // _representative.fold("α" + uid)(_.toString + "<~" + uid)
+      "α" + representative.uid
     override def hashCode: Int = uid
   }
   
@@ -264,32 +267,41 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
   def simplifyType(st: SimpleType): SimpleType = {
     
     val pos, neg = mutable.Set.empty[Variable]
-    val toSubstitute = mutable.Map.empty[Variable, ConcreteType]
     
-    def go(st: SimpleType, pol: Boolean): () => SimpleType = st match {
-      case Record(fs) =>
-        val _fs = fs.map(f => f._1 -> go(f._2, pol))
-        () => Record(_fs.map(f => f._1 -> f._2()))
-      case Function(l, r) =>
-        val _l = go(l, !pol)
-        val _r = go(r, pol)
-        () => Function(_l(), _r())
+    def analyze(st: SimpleType, pol: Boolean): Unit = st match {
+      case Record(fs) => fs.foreach(f => analyze(f._2, pol))
+      case Function(l, r) => analyze(l, !pol); analyze(r, pol)
       case v0: Variable =>
         val v = v0.representative
         (if (pol) pos else neg) += v
-        () => toSubstitute.getOrElse(v, v)
-      case Primitive(_) | Top | Bot => () => st
+        analyze(if (pol) v.lowerBound else v.upperBound, pol)
+      case Primitive(_) | Top | Bot => ()
     }
-    val gone = go(st, true)
+    analyze(st, true)
     
-    val onlyPos = pos.clone --= neg
-    val onlyNeg = neg.clone --= pos
-    onlyPos.foreach(v => toSubstitute += v -> v.lowerBound)
-    onlyNeg.foreach(v => toSubstitute += v -> v.upperBound)
+    val mapping = mutable.Map.empty[Variable, SimpleType]
     
-    println(s"Simplifications: ${toSubstitute.mkString(", ")}")
+    def transformConcrete(st: ConcreteType, pol: Boolean): ConcreteType = st match {
+      case Record(fs) => Record(fs.map(f => f._1 -> transform(f._2, pol)))
+      case Function(l, r) => Function(transform(l, !pol), transform(r, pol))
+      case Primitive(_) | Top | Bot => st
+    }
+    def transform(st: SimpleType, pol: Boolean): SimpleType = st match {
+      case v0: Variable =>
+        val v = v0.representative
+        mapping.getOrElseUpdate(v,
+        if (v.lowerBound === v.upperBound) transformConcrete(v.lowerBound, pol)
+        else 
+        if (pol && !neg(v)) transformConcrete(v.lowerBound, pol)
+        else if (!pol && !pos(v)) transformConcrete(v.upperBound, pol)
+        else {
+          val nv = new Variable(transformConcrete(v.lowerBound, true), transformConcrete(v.upperBound, false))
+          nv
+        })
+      case c: ConcreteType => transformConcrete(c, pol)
+    }
+    transform(st, true)
     
-    gone()
   }
   
   

@@ -1,5 +1,5 @@
 // fun x -> x.f
-{f: 'a} -> ⊥
+{f: 'a} -> 'a
 
 // {}
 {}
@@ -14,10 +14,10 @@ int
 int
 
 // fun f -> { x = f 42 }.x
-(int -> 'a) -> ⊥
+(int -> 'a) -> 'a
 
 // fun f -> { x = f 42; y = 123 }.y
-(int -> 'a) -> int
+(int -> ⊤) -> int
 
 // if true then { a = 1; b = true } else { b = false; c = 42 }
 {b: bool}

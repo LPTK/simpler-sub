@@ -1,15 +1,19 @@
 // let rec f = fun x -> f x.u in f
-// ERROR: Unsupported: local recursive let binding
+// ERROR: Illegal cyclic constraint: α2 <: {u: α2}
+
+// let rec consume = fun strm -> add strm.head (consume strm.tail) in consume
+// ERROR: Illegal cyclic constraint: α4 <: {head: α2, tail: α4}
+		where: α2 <: int
 
 // let rec r = fun a -> r in if true then r else r
-// ERROR: Unsupported: local recursive let binding
+// ERROR: Illegal cyclic constraint: α0 :> (α1 -> α0)
 
 // let rec l = fun a -> l in let rec r = fun a -> fun a -> r in if true then l else r
-// ERROR: Unsupported: local recursive let binding
+// ERROR: Illegal cyclic constraint: α0 :> (α1 -> α0)
 
 // let rec l = fun a -> fun a -> fun a -> l in let rec r = fun a -> fun a -> r in if true then l else r
-// ERROR: Unsupported: local recursive let binding
+// ERROR: Illegal cyclic constraint: α0 :> (α1 -> (α2 -> (α3 -> α0)))
 
 // let rec recursive_monster = fun x -> { thing = x; self = recursive_monster x } in recursive_monster
-// ERROR: Unsupported: local recursive let binding
+// ERROR: Illegal cyclic constraint: α2 :> {thing: α1, self: α2}
 
