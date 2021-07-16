@@ -290,14 +290,11 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       case v0: Variable =>
         val v = v0.representative
         mapping.getOrElseUpdate(v,
-        if (v.lowerBound === v.upperBound) transformConcrete(v.lowerBound, pol)
-        else 
-        if (pol && !neg(v)) transformConcrete(v.lowerBound, pol)
-        else if (!pol && !pos(v)) transformConcrete(v.upperBound, pol)
-        else {
-          val nv = new Variable(transformConcrete(v.lowerBound, true), transformConcrete(v.upperBound, false))
-          nv
-        })
+          if (v.lowerBound === v.upperBound) transformConcrete(v.lowerBound, pol)
+          else if (pol && !neg(v)) transformConcrete(v.lowerBound, pol)
+          else if (!pol && !pos(v)) transformConcrete(v.upperBound, pol)
+          else new Variable(transformConcrete(v.lowerBound, true), transformConcrete(v.upperBound, false))
+        )
       case c: ConcreteType => transformConcrete(c, pol)
     }
     transform(st, true)
