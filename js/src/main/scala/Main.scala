@@ -26,7 +26,8 @@ object Main {
       import simplesub.Parser.pgrm
       import simplesub.TypeError
       parse(str, pgrm(_), verboseFailures = false) match {
-        case Failure(err, index, extra) =>
+        case f: Failure =>
+          val Failure(err, index, extra) = f
           // this line-parsing logic was copied from fastparse internals:
           val lineNumberLookup = fastparse.internal.Util.lineNumberLookup(str)
           val line = lineNumberLookup.indexWhere(_ > index) match {

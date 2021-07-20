@@ -13,7 +13,8 @@ class ParserTests extends AnyFunSuite {
     parse(str, expr(_), verboseFailures = true) match {
       case Success(value, index) =>
         // println("OK: " + value)
-      case f @ Failure(expected, failIndex, extra) =>
+      case f: Failure =>
+        val Failure(expected, failIndex, extra) = f
         println(extra.trace())
         println(extra.trace().longAggregateMsg)
         assert(false)

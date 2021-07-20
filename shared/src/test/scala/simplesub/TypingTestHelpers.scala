@@ -64,7 +64,8 @@ class TypingTestHelpers extends AnyFunSuite {
         }
         "// ERROR: " + e.msg
     }
-    write.append(outFile.get, "// " + (if (expectError) "[wrong:] " else "") + str + "\n" + res + "\n\n", createFolders = true)
+    write.append(outFile.getOrElse(fail()),
+      "// " + (if (expectError) "[wrong:] " else "") + str + "\n" + res + "\n\n", createFolders = true)
   }
   def error(str: String, msg: String): Unit = {
     // assert(intercept[TypeError](doTest(str, "<none>")).msg == msg); ()
