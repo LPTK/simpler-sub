@@ -35,8 +35,7 @@ abstract class TyperDebugging { self: Typer =>
     def getVars: Set[Variable] = {
       val res = MutSet.empty[Variable]
       @tailrec def rec(queue: List[SimpleType]): Unit = queue match {
-        case (tv0: Variable) :: tys =>
-          val tv = tv0.representative
+        case (tv: Variable) :: tys =>
           if (res(tv)) rec(tys)
           else { res += tv; rec(tv.children ::: tys) }
         case ty :: tys => rec(ty.children ::: tys)

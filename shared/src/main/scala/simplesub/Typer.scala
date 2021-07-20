@@ -121,8 +121,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
   def freshenType(ty: SimpleType): SimpleType = {
     val freshened = MutMap.empty[Variable, Variable]
     def freshen(ty: SimpleType): SimpleType = ty match {
-      case tv0: Variable =>
-        val tv = tv0.representative
+      case tv: Variable =>
         freshened.get(tv) match {
           case Some(tv) => tv
           case None =>
@@ -216,7 +215,8 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       private var _lowerBound: ConcreteType,
       private var _upperBound: ConcreteType,
   ) extends SimpleType {
-    private[simplesub] val uid: Int = { freshCount += 1; freshCount - 1 }
+    private val _uid: Int = { val n = freshCount; freshCount += 1; n }
+    def uid: Int = representative._uid
     private var _representative: Option[Variable] = None
     def representative: Variable =
       _representative match {
@@ -252,6 +252,8 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       val rep0 = representative
       val rep1 = that.representative
       if (rep0 isnt rep1) {
+        // Note: these is occursCheck calls (and the following ones from addXBound are pretty
+        // inefficient as they will incur repeated computation of type variables through getVars:
         occursCheck(rep1._lowerBound, false)
         occursCheck(rep1._upperBound, true)
         rep1.newLowerBound(rep0._lowerBound)
@@ -262,7 +264,11 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
     override def toString: String =
       // _representative.fold("α" + uid)(_.toString + "<~" + uid)
       "α" + representative.uid
-    override def hashCode: Int = uid
+    override def hashCode: Int = representative.uid
+    override def equals(that: Any): Boolean = that match {
+      case that: Typer#Variable => representative is that.representative
+      case _ => false
+    }
   }
   
   
@@ -275,8 +281,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
     def analyze(st: SimpleType, pol: Boolean): Unit = st match {
       case Record(fs) => fs.foreach(f => analyze(f._2, pol))
       case Function(l, r) => analyze(l, !pol); analyze(r, pol)
-      case v0: Variable =>
-        val v = v0.representative
+      case v: Variable =>
         (if (pol) pos else neg) += v
         analyze(if (pol) v.lowerBound else v.upperBound, pol)
       case Primitive(_) | Top | Bot => ()
@@ -291,8 +296,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
       case Primitive(_) | Top | Bot => st
     }
     def transform(st: SimpleType, pol: Boolean): SimpleType = st match {
-      case v0: Variable =>
-        val v = v0.representative
+      case v: Variable =>
         mapping.getOrElseUpdate(v,
           if (v.lowerBound === v.upperBound) transformConcrete(v.lowerBound, pol)
           else if (pol && !neg(v)) transformConcrete(v.lowerBound, pol)
@@ -312,8 +316,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
   def coalesceType(st: SimpleType): Type = {
     val recursive = mutable.Map.empty[PolarVariable, TypeVariable]
     def go(st: SimpleType, polarity: Boolean)(inProcess: Set[PolarVariable]): Type = st match {
-      case tv0: Variable =>
-        val tv = tv0.representative
+      case tv: Variable =>
         val tv_pol = tv -> polarity
         if (inProcess.contains(tv_pol))
           recursive.getOrElseUpdate(tv_pol, freshVar.asTypeVar)
