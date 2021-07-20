@@ -32,6 +32,7 @@ class TypingTests extends TypingTestHelpers {
       "bool -> 'a -> 'a -> 'a")
     doTest("fun x -> fun y -> if x then y else x",
       "'a ∧ bool -> 'a -> 'a")
+    doTest("fun x -> { u = not x; v = x }", " ")
     
     error("succ true",
       "cannot constrain bool <: int")
@@ -52,6 +53,9 @@ class TypingTests extends TypingTestHelpers {
     doTest("fun f -> { x = f 42 }.x", "(int -> 'a) -> 'a")
     doTest("fun f -> { x = f 42; y = 123 }.y", "(int -> ⊤) -> int")
     doTest("if true then { a = 1; b = true } else { b = false; c = 42 }", "{b: bool}")
+    
+    doTest("if true then { u = 1; v = 2; w = 3 } else { u = true; v = 4; x = 5 }", " ")
+    doTest("if true then fun x -> { u = 1; v = x } else fun y -> { u = y; v = y }", " ")
     
     error("{ a = 123; b = true }.c",
       "missing field: c in {a: int, b: bool}")
@@ -113,7 +117,7 @@ class TypingTests extends TypingTestHelpers {
       "{u: 'a} as 'a -> ⊥")
     
     doTest("let rec consume = fun strm -> add strm.head (consume strm.tail) in consume",
-      "")
+      " ")
     
     // [test:T2]:
     doTest("let rec r = fun a -> r in if true then r else r",
@@ -157,6 +161,15 @@ class TypingTests extends TypingTestHelpers {
       "'a ∨ ('a ∧ {u: 'b} -> ('a ∨ 'b ∨ ('a ∧ {u: 'b} -> 'c)) as 'c)")
     // ^ Note: without canonicalization, we get the simpler:
     // ('b ∨ ('b ∧ {u: 'c} -> 'a ∨ 'c)) as 'a
+  }
+  
+  test("occurs-check") {
+    
+    error("fun x -> x.u x", "")
+    error("fun x -> x.u {v=x}", "")
+    doTest("fun x -> x.u x.v", " ")
+    error("fun x -> x.u.v x", "")
+    
   }
   
   

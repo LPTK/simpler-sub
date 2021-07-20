@@ -22,6 +22,12 @@ int
 // if true then { a = 1; b = true } else { b = false; c = 42 }
 {b: bool}
 
+// if true then { u = 1; v = 2; w = 3 } else { u = true; v = 4; x = 5 }
+{u: ⊤, v: int}
+
+// if true then fun x -> { u = 1; v = x } else fun y -> { u = y; v = y }
+'a -> {u: 'a ∨ int, v: 'a ∨ int}
+
 // [wrong:] { a = 123; b = true }.c
 // ERROR: missing field: c in {a: int, b: bool}
 

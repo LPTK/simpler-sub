@@ -57,7 +57,12 @@ class TypingTestHelpers extends AnyFunSuite {
       
       res
     } catch {
-      case e: TypeError => "// ERROR: " + e.msg
+      case e: TypeError =>
+        if (dbg) {
+          println("ERROR: " + e.msg)
+          println("---")
+        }
+        "// ERROR: " + e.msg
     }
     write.append(outFile.get, "// " + (if (expectError) "[wrong:] " else "") + str + "\n" + res + "\n\n", createFolders = true)
   }

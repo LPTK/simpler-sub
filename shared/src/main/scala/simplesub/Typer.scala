@@ -57,7 +57,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
   }
   
   /** Infer the type of a term. */
-  def typeTerm(term: Term)(implicit ctx: Ctx): SimpleType = trace(s"Ty $term") {
+  def typeTerm(term: Term)(implicit ctx: Ctx): SimpleType = trace(s"T $term") {
     lazy val res = freshVar
     term match {
       case Var(name) =>
@@ -86,11 +86,10 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
         } else err("Unsupported: local recursive let binding")
         else typeTerm(App(Lam(nme, bod), rhs))
     }
-  }(res => " : " + res)
+  }(res => ": " + res)
   
   /** Constrains the types to enforce a subtyping relationship `lhs` <: `rhs`. */
-  def constrain(lhs: SimpleType, rhs: SimpleType): Unit = {
-    // println(s"Constr. $lhs <: $rhs")
+  def constrain(lhs: SimpleType, rhs: SimpleType): Unit = trace(s"C $lhs <: $rhs") {
     if (lhs is rhs) return ()
     (lhs, rhs) match {
       case (Bot, _) | (_, Top) => ()
@@ -111,7 +110,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
         rhs.newLowerBound(lhs)
       case _ => err(s"cannot constrain ${lhs.show} <: ${rhs.show}")
     }
-  }
+  }()
   
   def err(msg: String): Nothing = throw TypeError(msg)
   

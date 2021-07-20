@@ -1,0 +1,15 @@
+// [wrong:] fun x -> x.u x
+// ERROR: Illegal cyclic constraint: α1 <: (α0 -> α2)
+		where: α0 <: {u: α1}
+
+// [wrong:] fun x -> x.u {v=x}
+// ERROR: Illegal cyclic constraint: α1 <: ({v: α0} -> α2)
+		where: α0 <: {u: α1}
+
+// fun x -> x.u x.v
+{u: 'a -> 'b, v: 'a} -> 'b
+
+// [wrong:] fun x -> x.u.v x
+// ERROR: Illegal cyclic constraint: α2 <: (α0 -> α3)
+		where: α0 <: {u: α1}, α1 <: {v: α2}
+

@@ -16,6 +16,9 @@ bool -> 'a -> 'a -> 'a
 // fun x -> fun y -> if x then y else x
 'a ∧ bool -> 'a ∧ bool -> 'a
 
+// fun x -> { u = not x; v = x }
+'a ∧ bool -> {u: bool, v: 'a}
+
 // [wrong:] succ true
 // ERROR: cannot constrain bool <: int
 
