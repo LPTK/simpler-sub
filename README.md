@@ -51,13 +51,13 @@ By contrast to Simple-sub, Simpler-sub does not support:
 Restriction (3) destroys principal type inference:
 there may now be well-typed terms that the type inference approach rejects.
 
-Restriction (1) each destroy the principal type property:
+Restriction (1) destroys the principal type property:
 there are now terms which cannot be ascribe a single most precise type
 – those which would have been typed by Simple-sub through a recursive type,
 but which can still be given less precise non-recursive types.
 Simpler-sub will in fact plainly reject any such term.
 
-Any of these simplification could be made independently, starting from Simple-sub.
+Each of these simplifications could be made independently, starting from Simple-sub.
 I chose to implement them all together in this project to show how simple the result could look like,
 while still being quite useful as a possible foundation for type inference in languages with subtyping.
 
