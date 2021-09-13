@@ -1,58 +1,64 @@
-# Simple-sub Algorithm for Algebraic Subtyping
+# Simpler-sub Algorithm for Type Inference with Subtyping
 
-This repository shows the implementation of **Simple-sub**,
-an alternative algorithm to MLsub for type inference based on algebraic subtyping.
+This repository shows the implementation of **Simpler-sub**,
+an alternative algorithm to [Simple-sub](https://github.com/LPTK/simple-sub) which is much easier to understand but also much more limited,
+though it is probably enough for many practical use cases.
 
-An online demo is available here: https://lptk.github.io/simple-sub/
-
-The corresponding ICFP Pearl paper preprint can be downloaded here: https://lptk.github.io/simple-sub-paper
-
-
-## Branches
+An online demo is available here: https://lptk.github.io/simpler-sub/
 
 
-### ICFP branch (for posterity)
+## Simplifications
 
-The code which corresponds precisely to the ICFP paper mentioned above
-can be found in the branch `mlsub-compare`,
-which also contains instructions for compiling MLsub
-and for systematically testing Simple-sub against it (on randomly-generated expressions).
+By contrast to Simple-sub, Simpler-sub does not support:
+
+  * (1) Recursive types: any recursive constraint will yield an error instead.
+    
+    If your language has externally-defined recursive data types (such as algebraic data types),
+    you don't strictly need recursive types anyway.
+    But in order to support field-recursing definitions of the form `let foo x = ... foo x.f ...`, you'll need a way to make it clear to the type checker which recursive data type's `f` field this `foo` recurses on
+    (otherwise you'll get a recursive constraint error between inferred record types).
+    One way to do that is to either reject the use of overloaded field names (like Haskell 98)
+    or use a type class for field selection instead of subtyping (like recent Haskell)
+    or use contextual information to disambiguate field selections when possible (like OCaml).
+    
+    The absence of recursive types makes some of the type inference algorithms simpler and more efficient,
+    as they can now freely decompose types inductively without having to carry a cache around.
+    
+  * (2) Nested let polymorphism: in this prototype, a _local_ (i.e., nested) `let ... in ...` binding will never be assigned a polymorphic type.
+  
+    This simplifies the approach further in that we don't have to deal with levels.
+    And there is precedent for it,
+    for example see the paper [Let Should not be Generalised](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tldi10-vytiniotis.pdf) by Dimitrios Vytiniotis, Simon Peyton Jones, and Tom Schrijvers.
+  
+  * (3) Precise type-variable-to-type-variable constraints: any constraint between two type variables immediately unifies the two variables.
+    
+    The consequence of this is not as dire as one may think,
+    thanks to pervasive polymorphism (though also see Restriction 2).
+    Programs that would typically exhibit problematic loss of precision with this approach are those similar to
+    `let test f x y = if f x then x else y`,
+    which is typed by Simple-sub as `('a -> bool) -> 'a ∧ 'b -> 'b -> 'b`,
+    but is now typed as `('a -> bool) -> 'a -> 'a -> 'a`
+    – notice that `y` is forced to be typed as `'a`, the parameter type taken by `f`,
+    even though it never flows into `f` and has in fact nothing to do with it.
+    
+    In Simple-sub, and in algebraic subtyping in general,
+    precise graphs of type variable inequalities are recorded,
+    and then need to be simplified aggressively before being displayed to the user.
+    Unifying type variables aggressively, on the other hand,
+    forces inferred type graphs to be almost as simple as in traditional Hindley-Milner type inference,
+    and makes inferred type simplification much easier.
+
+Restriction (3) destroys principal type inference:
+there may now be well-typed terms that the type inference approach rejects.
+
+Restriction (1) each destroy the principal type property:
+there are now terms which cannot be ascribe a single most precise type
+– those which would have been typed by Simple-sub through a recursive type,
+but which can still be given less precise non-recursive types.
+Simpler-sub will in fact plainly reject any such term.
+
+Any of these simplification could be made independently, starting from Simple-sub.
+I chose to implement them all together in this project to show how simple the result could look like,
+while still being quite useful as a possible foundation for type inference in languages with subtyping.
 
 
-### Master branch (current development)
-
-The current `master` branch contains newer changes, including:
- 
- * A type canonicalization algorithm to merge recursive types,
-    so that for instance the type inferred for `let rec r = fun a -> r in if true then r else r`
-    is just `(⊤ -> 'a) as 'a` instead of `⊤ -> (⊤ -> 'a) as 'a ∨ (⊤ -> 'b) as 'b`
-    (see `[test:T2]` in the code).
-
-
-
-## Running the tests
-
-Running the tests only requires the Scala Build Tool installed.
-In the terminal, run `sbt simplesubJVM/test`.
-
-
-## Running the demo locally
-
-To run the demo on your computer, first change the line in `index.html` from:
-```html
-<script type="text/javascript" src="bin/simple-algebraic-subtyping-opt.js"></script>
-```
-to:
-```html
-<script type="text/javascript" src="js/target/scala-2.13/simple-algebraic-subtyping-fastopt.js"></script>
-```
-
-And then compile the project with `sbt fastOptJS`.
-
-Finally, open the file `index.html` in your browser.
-
-You can make changes to the type inference code
-in `shared/src/main/scala/simplesub`,
-have it compile to JavaScript on file change with command
-`sbt ~fastOptJS`,
-and immediately see the results in your browser by refreshing the page with `F5`.
