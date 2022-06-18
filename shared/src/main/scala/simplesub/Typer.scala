@@ -10,8 +10,7 @@ final case class TypeError(val msg: String) extends Exception(msg)
 
 /** A class encapsulating type inference state.
  *  It uses its own internal representation of types and type variables, using mutable data structures.
- *  Inferred SimpleType values are then turned into CompactType values for simplification (see TypeSimplifier.scala).
- *  In order to turn the resulting CompactType into a simplesub.Type, we use `coalesceCompactType`.
+ *  Inferred SimpleType values are then turned into immutable simplesub.Type values.
  */
 class Typer(protected val dbg: Boolean) extends TyperDebugging {
   
@@ -208,8 +207,7 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
     override def toString = name
   }
   
-  /** A type variable living at a certain polymorphism level `level`, with mutable bounds.
-   *  Invariant: Types appearing in the bounds never have a level higher than this variable's `level`. */
+  /** A type variable with mutable bounds. */
   final class Variable(
       private var _lowerBound: ConcreteType,
       private var _upperBound: ConcreteType,
@@ -313,28 +311,20 @@ class Typer(protected val dbg: Boolean) extends TyperDebugging {
   
   /** Convert an inferred SimpleType into the immutable Type representation. */
   def coalesceType(st: SimpleType): Type = {
-    val recursive = mutable.Map.empty[PolarVariable, TypeVariable]
-    def go(st: SimpleType, polarity: Boolean)(inProcess: Set[PolarVariable]): Type = st match {
+    def go(st: SimpleType, polarity: Boolean): Type = st match {
       case tv: Variable =>
-        val tv_pol = tv -> polarity
-        if (inProcess.contains(tv_pol))
-          recursive.getOrElseUpdate(tv_pol, freshVar.asTypeVar)
-        else {
-          val bound = if (polarity) tv.lowerBound else tv.upperBound
-          val boundType = go(bound, polarity)(inProcess + tv_pol)
-          val mrg = if (polarity) Union else Inter
-          val res =
-            if (polarity && bound === Bot || bound === Top) tv.asTypeVar
-            else mrg(tv.asTypeVar, boundType)
-          recursive.get(tv_pol).fold(res)(RecursiveType(_, res))
-        }
-      case Function(l, r) => FunctionType(go(l, !polarity)(inProcess), go(r, polarity)(inProcess))
-      case Record(fs) => RecordType(fs.map(nt => nt._1 -> go(nt._2, polarity)(inProcess)))
+        val bound = if (polarity) tv.lowerBound else tv.upperBound
+        val boundType = go(bound, polarity)
+        val mrg = if (polarity) Union else Inter
+        if (polarity && bound === Bot || bound === Top) tv.asTypeVar
+        else mrg(tv.asTypeVar, boundType)
+      case Function(l, r) => FunctionType(go(l, !polarity), go(r, polarity))
+      case Record(fs) => RecordType(fs.map(nt => nt._1 -> go(nt._2, polarity)))
       case Primitive(n) => PrimitiveType(n)
       case Top => PrimitiveType("⊤")
       case Bot => PrimitiveType("⊥")
     }
-    go(st, true)(Set.empty)
+    go(st, true)
   }
   
   

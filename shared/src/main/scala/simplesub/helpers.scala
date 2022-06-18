@@ -11,7 +11,6 @@ abstract class TypeImpl { self: Type =>
   
   lazy val typeVarsList: List[TypeVariable] = this match {
     case uv: TypeVariable => uv :: Nil
-    case RecursiveType(n, b) => n :: b.typeVarsList
     case _ => children.flatMap(_.typeVarsList)
   }
   
@@ -34,7 +33,6 @@ abstract class TypeImpl { self: Type =>
     case Bot => "⊥"
     case PrimitiveType(name) => name
     case uv: TypeVariable => ctx(uv)
-    case RecursiveType(n, b) => s"${b.showIn(ctx, 31)} as ${ctx(n)}"
     case FunctionType(l, r) => parensIf(l.showIn(ctx, 11) + " -> " + r.showIn(ctx, 10), outerPrec > 10)
     case RecordType(fs) => fs.map(nt => s"${nt._1}: ${nt._2.showIn(ctx, 0)}").mkString("{", ", ", "}")
     case Union(l, r) => parensIf(l.showIn(ctx, 20) + " ∨ " + r.showIn(ctx, 20), outerPrec > 20)
@@ -47,7 +45,6 @@ abstract class TypeImpl { self: Type =>
     case RecordType(fs) => fs.map(_._2)
     case Union(l, r) => l :: r :: Nil
     case Inter(l, r) => l :: r :: Nil
-    case RecursiveType(n, b) => b :: Nil
   }
   
 }

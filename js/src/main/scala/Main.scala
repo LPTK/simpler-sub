@@ -2,7 +2,6 @@ import scala.util.Try
 import scala.scalajs.js.annotation.JSExportTopLevel
 import org.scalajs.dom
 import org.scalajs.dom.document
-import org.scalajs.dom.raw.{Event, TextEvent, UIEvent, HTMLTextAreaElement}
 
 object Main {
   def main(args: Array[String]): Unit = {
@@ -11,9 +10,9 @@ object Main {
     source.addEventListener("input", typecheck)
   }
   @JSExportTopLevel("typecheck")
-  def typecheck(e: UIEvent): Unit = {
+  def typecheck(e: dom.UIEvent): Unit = {
     e.target match {
-      case elt: HTMLTextAreaElement =>
+      case elt: dom.HTMLTextAreaElement =>
         update(elt.value)
     }
   }

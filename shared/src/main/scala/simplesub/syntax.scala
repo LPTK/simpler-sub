@@ -24,7 +24,6 @@ final case class Union(lhs: Type, rhs: Type)                  extends Type
 final case class Inter(lhs: Type, rhs: Type)                  extends Type
 final case class FunctionType(lhs: Type, rhs: Type)           extends Type
 final case class RecordType(fields: List[(String, Type)])     extends Type
-final case class RecursiveType(uv: TypeVariable, body: Type)  extends Type
 final case class PrimitiveType(name: String)                  extends Type
 final class TypeVariable(val nameHint: String, val hash: Int) extends Type {
   override def toString: String = s"$nameHint:$hash"
